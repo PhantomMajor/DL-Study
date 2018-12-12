@@ -53,7 +53,6 @@ Make sure that your dimensions match between each layer. Recall that ` n ^ [l] `
 
 <table style="width:100%">
 
-
     <tr>
         <td> </td>
         <td> **Shape of W ** </td>
@@ -72,7 +71,7 @@ Make sure that your dimensions match between each layer. Recall that ` n ^ [l] `
     <tr>
 
     <tr>
-        <td> **Layer 2 ** </ td >
+        <td> **Layer 2 ** </td >
         <td> (n ^ [2], n ^ [1]) </td>
         <td> (n ^ [2], 1) </td>
         <td> Z ^ [2]=W ^ [2] A ^ [1] + b ^ [2] </td>
