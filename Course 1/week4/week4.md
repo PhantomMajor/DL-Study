@@ -173,12 +173,137 @@ def linear_forward(A, W, b):
 
 We will use two activation functions:
 
-- **Sigmoid**: $\sigma(Z) = \sigma(W A + b) = \frac{1}{ 1 + e^{-(W A + b)}}$. We have provided you with the `sigmoid` function. This function returns **two** items: the activation value "`a`" and a "`cache`" that contains "`Z`" (it's what we will feed in to the corresponding backward function). To use it you could just call: 
+- **Sigmoid**: `sigma(Z) = sigma(W A + b) = 1 / { 1 + e^-(W A + b)}`. This function returns **two** items: the activation value "a" and a "cache" that contains "Z" (it's what we will feed in to the corresponding backward function). To use it you could just call: 
 ``` python
 A, activation_cache = sigmoid(Z)
 ```
 
-- **ReLU**: The mathematical formula for ReLu is $A = RELU(Z) = max(0, Z)$. We have provided you with the `relu` function. This function returns **two** items: the activation value "`A`" and a "`cache`" that contains "`Z`" (it's what we will feed in to the corresponding backward function). To use it you could just call:
+- **ReLU**: The mathematical formula for ReLu is `A = RELU(Z) = max(0, Z)`. This function returns **two** items: the activation value "A" and a "cache" that contains "Z" (it's what we will feed in to the corresponding backward function). To use it you could just call:
 ``` python
 A, activation_cache = relu(Z)
 ```
+
+```py
+
+def linear_activation_forward(A_prev, W, b, activation):
+    """
+    Implement the forward propagation for the LINEAR->ACTIVATION layer
+
+    Arguments:
+    A_prev -- activations from the previous layer (or input data): (size of previous layer, number of examples)
+    W -- weights matrix: numpy array of shape (size of current layer, size of previous layer)
+    b -- bias vector: numpy array of shape (size of current layer, 1)
+    activation -- the activation to be used in this layer, stored as a text string: 'sigmoid' or 'relu'
+
+    Returns:
+    A -- the output of the activation function, also called the post activation value
+    cache -- a python dictionary containg the 'linear_cache' and 'activation_cache'; stored to compute backward pass effectively
+    """
+
+    if activation == 'sigmoid':
+        Z, linear_cache = linear_forward(A_prev, W, b)
+        A, activation_cache = sigmoid(Z)
+
+    elif activation == 'relu':
+        Z, linear_cache = linear_forward(A_prev, W, b)
+        A, activation_cache = relu(Z)
+
+    assert (A.shape() == (W.shape[0], A_prev.shape[1]))
+    cache = (linear_cache, activation_cache)
+
+    return A, cache
+
+```
+
+For an L-layer model, we will need a function to replicate the linear_activation_forward function L-1 times with ReLU and 1 times with Sigmoid
+
+<img src="model_architecture_kiank.png" style="width:600px;height:300px;">
+<caption><center> **Figure 2** : [LINEAR -> RELU] * (L-1) -> LINEAR -> SIGMOID model</center></caption><br>
+
+In the code below, the variable AL will denote `A[L] = sigmoid(Z[L]) = sigmoid(W[L]A[L−1] + b[L])`. This is sometimes also called Yhat.
+
+```py
+
+def L_model_forward(X, parameters):
+    """
+    Implement forward propagation for [LINEAR->RELU]*(L-1)->[LINEAR->SIGMOID] computation.
+
+    Arguments:
+    X -- data, numpy array of shape (input size, number of examples)
+    parameters -- output of initialize_parameters_deep()
+
+    Returns:
+    AL -- last post-activation value
+    caches -- list of caches containing:
+                every cache of linear_activation_forward() (there are L-1 of them, indexed from 0 to L-1)
+    """
+
+    caches = []
+    A = X
+    L = len(parameters) // 2  # number of layers in the network
+
+    # implement LINEAR->RELU L-1 times
+    # add cache to caches
+    for l in range(L-1):
+        A_prev = A
+        A, cache = linear_activation_forward(A_prev, parameters['W' + str(l)], parameters['b' + str(l)], 'relu')
+        caches.append(cache)
+
+    # implement LINEAR->SIGMOID
+    # add cache to caches
+    AL, cache = linear_activation_forward(A, parameters['W' + str(L)], parameters['b' + str(L)], 'sigmoid')
+    caches.append(cache)
+
+    assert(AL.shape() == (1, X.shape[1]))
+
+    return AL, caches
+
+```
+
+## 5-Cost Function ##
+
+Now we compute the costs to check if the model is really learning.
+
+To calculate the cross entropy cost J, we use the formula:
+
+```py
+(-1/m) * summation(i = 1 to m){
+    ( y^(i)*log( a^[L](i) ) ) + ( (1-y^(i))*log( 1-a^[L](i) ) ) 
+} 
+```
+
+```py
+
+def compute_cost(AL, Y):
+    """
+    Implement the cost function defined by the above equtaion
+
+    Arguments:
+    AL -- post activation value from the last layer.
+          This is ALSO the probability vector corresponding to the labeled predictions, shape (1, number of examples)
+    Y -- true 'label' vector (for example, containing 0 if non cat, 1 if cat), shape (1, number of examples)
+
+    Returns:
+    cost -- cross entropy cost
+    """
+
+    m = Y.shape[1]
+
+    # compute loss from aL and y
+    cost = (-1/m) * np.sum( (Y*np.log(AL) + (1-Y)*np.log(1-AL)), axis= 1, keepdims= True)
+
+    cost = np.squeeze(cost)  # To make sure your cost's shape is what we expect (e.g. this turns [[17]] into 17).
+    assert (cost.shape() == () )
+
+    return cost
+
+```
+
+## 6 - Backward propagation module ##
+
+Just like with forward propagation, you will implement helper functions for backpropagation. Remember that back propagation is used to calculate the gradient of the loss function with respect to the parameters. 
+
+**Reminder**: 
+<img src="backprop_kiank.png" style="width:650px;height:250px;">
+<caption><center> **Figure 3** : Forward and Backward propagation for *LINEAR->RELU->LINEAR->SIGMOID* <br> *The purple blocks represent the forward propagation, and the red blocks represent the backward propagation.*  </center></caption>
+
