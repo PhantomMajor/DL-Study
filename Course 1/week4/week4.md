@@ -66,7 +66,6 @@ Make sure that your dimensions match between each layer. Recall that ` n ^ [l] `
         <td> (n ^ [1], 12288) </td >
         <td> (n ^ [1], 1) </td>
         <td> Z ^ [1]=W ^ [1]  X + b ^ [1] </td>
-
         <td> (n ^ [1], 209) </td>
    </tr>
 
